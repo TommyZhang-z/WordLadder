@@ -23,22 +23,40 @@ def get_neighbors(word: str, lexicon: set[str]) -> [str]:
 
 
 def generate(from_: str, to_: str, lexicon: set[str]) -> [str]:
-    queue = deque([(from_, [from_])])
+    queue = deque()
+    queue.append([from_])
+    ladders = []
     visited = set()
-    list_of_ladders = []
 
     # keep words with the same length as "from_"/"to_"
     filtered_lexicon = {word for word in lexicon if len(word) == len(from_)}
 
     # run bfs
     while queue:
-        word, path = queue.popleft()
-        if word not in visited:
-            visited.add(word)
-            if word == to_:
-                list_of_ladders.append(path)
-                continue
-            for neighbor in get_neighbors(word, filtered_lexicon):
-                if neighbor not in visited:
-                    queue.append((neighbor, path + [neighbor]))
-    return list_of_ladders
+        level_size = len(queue)
+        found = False
+        for i in range(level_size):
+            cur_ladder = queue.popleft()
+            cur_word = cur_ladder[-1]
+            visited.add(cur_word)
+
+            # Check if we reached the end word
+            if cur_word == to_:
+                ladders.append(cur_ladder)
+                found = True
+
+            for new_word in get_neighbors(cur_word, filtered_lexicon):
+                if new_word not in visited:
+                    new_ladder = cur_ladder + [new_word]
+                    queue.append(new_ladder)
+        if found:
+            break
+
+    shortest_length = min(ladders, key=lambda x: len(x))
+    shortest_ladders = [ladder for ladder in ladders if len(ladder) == shortest_length]
+    return shortest_ladders
+
+
+if __name__ == '__main__':
+    lexicon = read_lexicon("english.txt")
+    print(generate("atlases", "cabaret", lexicon))
